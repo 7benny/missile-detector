@@ -7,6 +7,8 @@ from utils.datasets import MissileDataset
 from utils.transforms import Compose, Resize, ToTensor
 import cv2
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor
+from cython.processing import parallel_resize  # Import the Cython function
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -19,6 +21,7 @@ criterion_cls = nn.BCEWithLogitsLoss()
 criterion_reg = nn.SmoothL1Loss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
+# Training loop
 for epoch in range(10):
     model.train()
     for batch in dataloader:
@@ -32,18 +35,27 @@ for epoch in range(10):
         loss.backward()
         optimizer.step()
 
+# Real-time detection
 model.eval()
 cap = cv2.VideoCapture(0)
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-    img = cv2.resize(frame, (256, 256))
-    img_tensor = torch.from_numpy(img).permute(2, 0, 1).unsqueeze(0).float().to(device) / 255.0
+executor = ThreadPoolExecutor(max_workers=2)
+
+def process_frame(frame):
+    img = frame.transpose(2, 0, 1).astype(np.float32) / 255.0
+    img_resized = parallel_resize(img, 256, 256)
+    img_tensor = torch.from_numpy(img_resized).unsqueeze(0).to(device)
     with torch.no_grad():
         outputs_cls, outputs_reg = model(img_tensor)
     score = torch.sigmoid(outputs_cls).item()
     bbox = outputs_reg.squeeze().cpu().numpy()
+    return score, bbox
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+    future = executor.submit(process_frame, frame)
+    score, bbox = future.result()
     if score > 0.5:
         x1, y1, x2, y2 = bbox
         x1 = int(x1 * frame.shape[1] / 256)

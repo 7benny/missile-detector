@@ -1,9 +1,9 @@
 # 🚀 Missile Detection System
 
-📁 **Structure**
+📁 **Project Structure**
 
 ```
-missile_detector/
+missile_detection/
 ├── data/                🖼️
 ├── models/              🧠
 │   ├── __init__.py
@@ -12,7 +12,11 @@ missile_detector/
 │   ├── __init__.py
 │   ├── datasets.py
 │   └── transforms.py
+├── cython/              ⚙️   # Uses OpenMP
+│   ├── __init__.py
+│   └── processing.pyx
 ├── main.py              🎯
+├── setup.py             🔧
 ├── requirements.txt     📋
 └── README.md            📖
 ```
@@ -27,7 +31,13 @@ missile_detector/
    pip install -r requirements.txt
    ```
 
-2. **Place data** 📂: Put images and annotations in `data/` directory.
+2. **Build Cython extension** 🛠️:
+
+   ```bash
+   python setup.py build_ext --inplace
+   ```
+
+3. **Place data** 📂: Put images and annotations in the `data/` directory.
 
 ---
 
@@ -46,6 +56,7 @@ missile_detector/
 - **Model** (`models/missile_detector.py`) 🧠
 - **Dataset loader** (`utils/datasets.py`) 📄
 - **Transforms** (`utils/transforms.py`) 🔄
+- **Cython Processing** (`cython/processing.pyx`) ⚡ (Uses OpenMP)
 
 ---
 
@@ -55,6 +66,7 @@ missile_detector/
 - `torchvision`
 - `opencv-python`
 - `numpy`
+- `cython`
 
 ---
 
@@ -79,6 +91,10 @@ missile_detector/
 
 ---
 
-👍 **Usage**
+💡 **OpenMP Usage**
 
-- **Start training** and **real-time detection** with one command 🎉
+- **OpenMP** is utilized in `cython/processing.pyx` via Cython's `cython.parallel` module.
+- **Compilation flags** in `setup.py` include `-fopenmp` to enable OpenMP support.
+- **No explicit import** of OpenMP is needed in the code; it's handled during compilation.
+
+---

@@ -12,7 +12,7 @@ class MissileDataset(Dataset):
         for file in os.listdir(root_dir):
             if file.endswith('.jpg') or file.endswith('.png'):
                 self.image_files.append(os.path.join(root_dir, file))
-                annotation_file = file.replace('.jpg', '.txt').replace('.png', '.txt')
+                annotation_file = file.rsplit('.', 1)[0] + '.txt'
                 self.annotations.append(os.path.join(root_dir, annotation_file))
 
     def __len__(self):

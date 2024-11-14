@@ -1,6 +1,5 @@
 import torch
 import torchvision.transforms.functional as F
-import random
 
 class Compose(object):
     def __init__(self, transforms):
